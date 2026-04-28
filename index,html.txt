@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<title>Älykkyystesti – Web Quiz</title>
+<style>
+   * {
+     box-sizing: border-box;
+     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+   }
+   body {
+     margin: 0;
+     min-height: 100vh;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     background: linear-gradient(135deg, #f5f7ff, #e0ecff);
+     color: #222;
+   }
+   .app {
+     background: #ffffff;
+     width: 100%;
+     max-width: 800px;
+     margin: 16px;
+     padding: 24px 24px 32px;
+     border-radius: 16px;
+     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+   }
+   h1 {
+     margin-top: 0;
+     font-size: 1.8rem;
+     text-align: center;
+     color: #1f3b70;
+   }
+   .subtitle {
+     text-align: center;
+     font-size: 0.95rem;
+     color: #555;
+     margin-bottom: 20px;
+   }
+   .badge-row {
+     display: flex;
+     justify-content: center;
+     gap: 8px;
+     margin-bottom: 16px;
+     flex-wrap: wrap;
+   }
+   .badge {
+     padding: 4px 10px;
+     border-radius: 999px;
+     font-size: 0.75rem;
+     font-weight: 600;
+     color: #fff;
+   }
+   .badge.social { background: #ff8a65; }
+   .badge.arts   { background: #ba68c8; }
+   .badge.math   { background: #4db6ac; }
+   .screen {
+     display: none;
+   }
+   .screen.active {
+     display: block;
+   }
+   .btn {
+     border: none;
+     border-radius: 999px;
+     padding: 10px 18px;
+     font-size: 0.95rem;
+     font-weight: 600;
+     cursor: pointer;
+     transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+   }
+   .btn-primary {
+     background: #1f6feb;
+     color: #fff;
+     box-shadow: 0 6px 14px rgba(31, 111, 235, 0.35);
+   }
+   .btn-primary:hover {
+     background: #1958b8;
+     transform: translateY(-1px);
+     box-shadow: 0 8px 18px rgba(31, 111, 235, 0.45);
+   }
+   .btn-secondary {
+     background: #e3ebff;
+     color: #1f3b70;
+   }
+   .btn-secondary:hover {
+     background: #d3ddff;
+   }
+   .center {
+     text-align: center;
+   }
+   .question-header {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-bottom: 12px;
+     font-size: 0.9rem;
+     color: #555;
+   }
+   .category-tag {
+     padding: 4px 10px;
+     border-radius: 999px;
+     font-size: 0.75rem;
+     font-weight: 600;
+     color: #fff;
+   }
+   .category-social { background: #ff8a65; }
+   .category-arts   { background: #ba68c8; }
+   .category-math   { background: #4db6ac; }
+   .progress {
+     font-size: 0.8rem;
+     color: #777;
+   }
+   .question-box {
+     background: #f7f8ff;
+     border-radius: 12px;
+     padding: 16px 18px;
+     margin-bottom: 16px;
+     border: 1px solid #e0e4ff;
+   }
+   .question-text {
+     font-size: 1.05rem;
+     margin: 0;
+   }
+   .options {
+     display: grid;
+     gap: 10px;
+     margin-bottom: 16px;
+   }
+   .option-btn {
+     width: 100%;
+     text-align: left;
+     border-radius: 999px;
+     border: 1px solid #d0d7ff;
+     background: #fff;
+     padding: 10px 14px;
+     font-size: 0.95rem;
+     cursor: pointer;
+     transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+   }
+   .option-btn:hover {
+     background: #f0f3ff;
+     transform: translateY(-1px);
+   }
+   .option-btn.correct {
+     background: #c8e6c9;
+     border-color: #66bb6a;
+     color: #1b5e20;
+   }
+   .option-btn.wrong {
+     background: #ffcdd2;
+     border-color: #e57373;
+     color: #b71c1c;
+   }
+   .option-btn.disabled {
+     cursor: default;
+     opacity: 0.8;
+   }
+   .footer-row {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     gap: 8px;
+     flex-wrap: wrap;
+   }
+   .score-chip {
+     font-size: 0.85rem;
+     color: #555;
+   }
+   .score-chip span {
+     font-weight: 600;
+   }
+   .results-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+     gap: 12px;
+     margin: 18px 0;
+   }
+   .result-card {
+     border-radius: 12px;
+     padding: 12px 14px;
+     background: #f7f8ff;
+     border: 1px solid #e0e4ff;
+     font-size: 0.9rem;
+   }
+   .result-title {
+     font-weight: 700;
+     margin-bottom: 4px;
+   }
+   .result-score {
+     font-size: 0.95rem;
+     margin-bottom: 4px;
+   }
+   .result-comment {
+     font-size: 0.85rem;
+     color: #555;
+   }
+   .overall-score {
+     text-align: center;
+     margin-top: 8px;
+     font-size: 1.1rem;
+     font-weight: 700;
+     color: #1f3b70;
+   }
+   .small {
+     font-size: 0.8rem;
+     color: #777;
+     text-align: center;
+     margin-top: 6px;
+   }
+   @media (max-width: 600px) {
+     .app {
+       padding: 18px 16px 24px;
+     }
+     h1 {
+       font-size: 1.5rem;
+     }
+   }
+</style>
+</head>
+<body>
+<div class="app">
+<!-- START SCREEN -->
+<div id="start-screen" class="screen active">
+<h1>Älykkyystesti – Web Quiz</h1>
+<p class="subtitle">
+       Testaa älykkyyttäsi kolmella osa-alueella: sosiaaliset taidot, taide ja matematiikka.
+</p>
+<div class="badge-row">
+<span class="badge social">Social skills</span>
+<span class="badge arts">Arts skills</span>
+<span class="badge math">Math skills</span>
+</div>
+<div class="center" style="margin-top: 24px;">
+<button id="start-btn" class="btn btn-primary">Aloita testi</button>
+</div>
+<p class="small">
+       Single Page Application – ei sivun uudelleenlatauksia, kaikki logiikka JavaScriptillä.
+</p>
+</div>
+<!-- QUIZ SCREEN -->
+<div id="quiz-screen" class="screen">
+<div class="question-header">
+<div id="category-tag" class="category-tag">Category</div>
+<div class="progress" id="progress-text">Kysymys 1 / 1</div>
+</div>
+<div class="question-box">
+<p id="question-text" class="question-text"></p>
+</div>
+<div id="options-container" class="options"></div>
+<div class="footer-row">
+<div class="score-chip">
+         Pisteet: <span id="score-total">0</span>
+</div>
+<button id="next-btn" class="btn btn-primary" disabled>Seuraava</button>
+</div>
+</div>
+<!-- RESULT SCREEN -->
+<div id="result-screen" class="screen">
+<h1>Tulokset – Älykkyystesti</h1>
+<p class="subtitle">
+       Tässä on pisteesi eri osa-alueilla. Tämä on vain leikkimielinen testi, ei virallinen arviointi.
+</p>
+<div class="results-grid">
+<div class="result-card">
+<div class="result-title">Social skills</div>
+<div class="result-score" id="social-score"></div>
+<div class="result-comment" id="social-comment"></div>
+</div>
+<div class="result-card">
+<div class="result-title">Arts skills</div>
+<div class="result-score" id="arts-score"></div>
+<div class="result-comment" id="arts-comment"></div>
+</div>
+<div class="result-card">
+<div class="result-title">Math skills</div>
+<div class="result-score" id="math-score"></div>
+<div class="result-comment" id="math-comment"></div>
+</div>
+</div>
+<div class="overall-score" id="overall-score"></div>
+<p class="small">
+       Voit tehdä testin uudelleen ja verrata tuloksia. Harjoittelu kehittää kaikkia taitoja.
+</p>
+<div class="center" style="margin-top: 18px;">
+<button id="restart-btn" class="btn btn-secondary">Tee testi uudelleen</button>
+</div>
+</div>
+</div>
+<script>
+   // -----------------------------
+   // DATA: Questions for each area
+   // -----------------------------
+   const questions = [
+     // SOCIAL SKILLS
+     {
+       category: "social",
+       text: "Kaverisi näyttää olevan surullinen, mutta ei sano mitään. Mitä teet ensin?",
+       options: [
+         "Odota hiljaa ja toivot, että hän piristyy itse.",
+         "Kysyt rauhallisesti, haluaako hän puhua asiasta.",
+         "Vaihdat nopeasti puheenaihetta johonkin hauskaan."
+       ],
+       correctIndex: 1
+     },
+     {
+       category: "social",
+       text: "Ryhmätöissä yksi jäsen ei puhu juuri lainkaan. Mikä on paras tapa tukea häntä?",
+       options: [
+         "Kysyt häneltä suoraan mielipidettä ja annat aikaa vastata.",
+         "Teet kaiken itse, jotta työ valmistuu nopeammin.",
+         "Sanot opettajalle, että hän ei tee mitään."
+       ],
+       correctIndex: 0
+     },
+     {
+       category: "social",
+       text: "Jos huomaat, että kaksi ystävääsi riitelee väärinkäsityksen takia, mitä teet?",
+       options: [
+         "Kannustat heitä kuuntelemaan toistensa näkökulmaa.",
+         "Lähdet pois ja annat heidän selvittää itse.",
+         "Valitset puolen ja puolustat vain toista."
+       ],
+       correctIndex: 0
+     },
+     // ARTS SKILLS
+     {
+       category: "arts",
+       text: "Kun suunnittelet julistetta koulutapahtumaan, mikä on tärkeintä, että ihmiset huomaavat sen?",
+       options: [
+         "Käytät selkeää otsikkoa ja vahvaa kontrastia väreissä.",
+         "Kirjoitat mahdollisimman paljon tekstiä pienellä fontilla.",
+         "Käytät vain yhtä väriä, jotta se on yksinkertainen."
+       ],
+       correctIndex: 0
+     },
+     {
+       category: "arts",
+       text: "Mikä väriyhdistelmä luo yleensä rauhallisen tunnelman?",
+       options: [
+         "Kirkkaan punainen ja neon-keltainen.",
+         "Sininen ja vaaleanvihreä.",
+         "Musta ja kirkkaan oranssi."
+       ],
+       correctIndex: 1
+     },
+     {
+       category: "arts",
+       text: "Kun sävellät pientä melodiaa, mikä tekee siitä helpommin muistettavan?",
+       options: [
+         "Lyhyt, toistuva teema, jossa on selkeä rytmi.",
+         "Hyvin pitkä ja monimutkainen sävelkulku.",
+         "Satunnaiset äänet ilman mitään toistoa."
+       ],
+       correctIndex: 0
+     },
+     // MATH SKILLS
+     {
+       category: "math",
+       text: "Jos sinulla on 3 × 4 omenaa, montako omenaa sinulla on yhteensä?",
+       options: [
+         "7",
+         "12",
+         "16"
+       ],
+       correctIndex: 1
+     },
+     {
+       category: "math",
+       text: "Luku 0,25 on sama kuin...",
+       options: [
+         "1/2",
+         "1/3",
+         "1/4"
+       ],
+       correctIndex: 2
+     },
+     {
+       category: "math",
+       text: "Jos bussilippu maksaa 2,40 € ja sinulla on 10 €, paljonko rahaa jää jäljelle?",
+       options: [
+         "7,60 €",
+         "6,40 €",
+         "8,40 €"
+       ],
+       correctIndex: 0
+     }
+   ];
+   // -----------------------------
+   // STATE
+   // -----------------------------
+   let currentIndex = 0;
+   let totalScore = 0;
+   const categoryScores = {
+     social: 0,
+     arts: 0,
+     math: 0
+   };
+   const categoryTotals = {
+     social: questions.filter(q => q.category === "social").length,
+     arts: questions.filter(q => q.category === "arts").length,
+     math: questions.filter(q => q.category === "math").length
+   };
+   // -----------------------------
+   // ELEMENTS
+   // -----------------------------
+   const startScreen = document.getElementById("start-screen");
+   const quizScreen = document.getElementById("quiz-screen");
+   const resultScreen = document.getElementById("result-screen");
+   const startBtn = document.getElementById("start-btn");
+   const nextBtn = document.getElementById("next-btn");
+   const restartBtn = document.getElementById("restart-btn");
+   const categoryTag = document.getElementById("category-tag");
+   const progressText = document.getElementById("progress-text");
+   const questionText = document.getElementById("question-text");
+   const optionsContainer = document.getElementById("options-container");
+   const scoreTotalEl = document.getElementById("score-total");
+   const socialScoreEl = document.getElementById("social-score");
+   const artsScoreEl = document.getElementById("arts-score");
+   const mathScoreEl = document.getElementById("math-score");
+   const socialCommentEl = document.getElementById("social-comment");
+   const artsCommentEl = document.getElementById("arts-comment");
+   const mathCommentEl = document.getElementById("math-comment");
+   const overallScoreEl = document.getElementById("overall-score");
+   // -----------------------------
+   // HELPERS
+   // -----------------------------
+   function showScreen(screen) {
+     [startScreen, quizScreen, resultScreen].forEach(s => s.classList.remove("active"));
+     screen.classList.add("active");
+   }
+   function getCategoryLabel(cat) {
+     if (cat === "social") return "Social skills";
+     if (cat === "arts") return "Arts skills";
+     if (cat === "math") return "Math skills";
+     return cat;
+   }
+   function setCategoryTag(cat) {
+     categoryTag.className = "category-tag";
+     if (cat === "social") categoryTag.classList.add("category-social");
+     if (cat === "arts") categoryTag.classList.add("category-arts");
+     if (cat === "math") categoryTag.classList.add("category-math");
+     categoryTag.textContent = getCategoryLabel(cat);
+   }
+   function renderQuestion() {
+     const q = questions[currentIndex];
+     setCategoryTag(q.category);
+     progressText.textContent = `Kysymys ${currentIndex + 1} / ${questions.length}`;
+     questionText.textContent = q.text;
+     optionsContainer.innerHTML = "";
+     nextBtn.disabled = true;
+     q.options.forEach((opt, index) => {
+       const btn = document.createElement("button");
+       btn.className = "option-btn";
+       btn.textContent = opt;
+       btn.addEventListener("click", () => handleAnswer(index));
+       optionsContainer.appendChild(btn);
+     });
+   }
+   function handleAnswer(selectedIndex) {
+     const q = questions[currentIndex];
+     const optionButtons = Array.from(document.querySelectorAll(".option-btn"));
+     optionButtons.forEach((btn, index) => {
+       btn.classList.add("disabled");
+       btn.disabled = true;
+       if (index === q.correctIndex) {
+         btn.classList.add("correct");
+       }
+       if (index === selectedIndex && selectedIndex !== q.correctIndex) {
+         btn.classList.add("wrong");
+       }
+     });
+     if (selectedIndex === q.correctIndex) {
+       totalScore++;
+       categoryScores[q.category]++;
+       scoreTotalEl.textContent = totalScore;
+     }
+     nextBtn.disabled = false;
+   }
+   function showResults() {
+     showScreen(resultScreen);
+     const social = categoryScores.social;
+     const arts = categoryScores.arts;
+     const math = categoryScores.math;
+     socialScoreEl.textContent = `${social} / ${categoryTotals.social}`;
+     artsScoreEl.textContent = `${arts} / ${categoryTotals.arts}`;
+     mathScoreEl.textContent = `${math} / ${categoryTotals.math}`;
+     socialCommentEl.textContent =
+       social === categoryTotals.social
+         ? "Erittäin vahvat sosiaaliset taidot – kuuntelet ja huomioit muita hienosti."
+         : social >= 2
+         ? "Hyvät sosiaaliset taidot, mutta voit vielä harjoitella ristiriitojen ratkaisua."
+         : "Voit kehittää sosiaalisia taitoja harjoittelemalla kuuntelemista ja empatiaa.";
+     artsCommentEl.textContent =
+       arts === categoryTotals.arts
+         ? "Luova ja visuaalisesti herkkä – ymmärrät värejä ja rytmiä hyvin."
+         : arts >= 2
+         ? "Sinulla on hyvä taidesilmä, jatka kokeilemista ja harjoittelua."
+         : "Taiteelliset taidot kehittyvät tekemällä – piirrä, sävellä ja kokeile rohkeasti.";
+     mathCommentEl.textContent =
+       math === categoryTotals.math
+         ? "Vahvat matemaattiset taidot – peruslasku ja murtoluvut hallussa."
+         : math >= 2
+         ? "Hyvä matikkapohja, pienellä harjoittelulla taidot vahvistuvat entisestään."
+         : "Matematiikka paranee harjoittelemalla askel kerrallaan – älä luovuta.";
+     overallScoreEl.textContent = `Kokonaispisteet: ${totalScore} / ${questions.length}`;
+   }
+   function resetQuiz() {
+     currentIndex = 0;
+     totalScore = 0;
+categoryScores.social = 0;
+     categoryScores.arts = 0;
+     categoryScores.math = 0;
+     scoreTotalEl.textContent = "0";
+   }
+   // -----------------------------
+   // EVENT LISTENERS
+   // -----------------------------
+   startBtn.addEventListener("click", () => {
+     resetQuiz();
+     showScreen(quizScreen);
+     renderQuestion();
+   });
+   nextBtn.addEventListener("click", () => {
+     currentIndex++;
+     if (currentIndex >= questions.length) {
+       showResults();
+     } else {
+       renderQuestion();
+     }
+   });
+   restartBtn.addEventListener("click", () => {
+     resetQuiz();
+     showScreen(quizScreen);
+     renderQuestion();
+   });
+</script>
+</body>
+</html>
